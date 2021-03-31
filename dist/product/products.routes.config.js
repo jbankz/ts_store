@@ -1,40 +1,38 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductsRoutes = void 0;
 const common_routes_config_1 = require("../common/common.routes.config");
+const product_controller_1 = __importDefault(require("./controller/product.controller"));
+const product_middleware_1 = __importDefault(require("./middleware/product.middleware"));
 class ProductsRoutes extends common_routes_config_1.CommonRoutesConfig {
     constructor(app) {
-        super(app, 'ProductsRoutes');
+        super(app, 'ProductRoutes');
     }
     configureRoutes() {
-        this.app.route(`/products`)
-            .get((req, res) => {
-            res.status(200).send(`get lists of users`);
-        })
-            .post((req, res) => {
-            res.status(200).send(`Create a product`);
-        });
-        this.app.route(`/products/:productID`)
-            .all((req, res, next) => {
-            // this middleware function runs before any request to /users/:userId
-            // but it doesn't accomplish anything just yet---
-            // it simply passes control to the next applicable function below using next()
-            next();
-        })
-            .get((req, res) => {
-            res.status(200).send(`GET requested for id ${req.params.userId}`);
-        })
-            .put((req, res) => {
-            res.status(200).send(`PUT requested for id ${req.params.userId}`);
-        })
-            .patch((req, res) => {
-            res.status(200).send(`PATCH requested for id ${req.params.userId}`);
-        })
-            .delete((req, res) => {
-            res.status(200).send(`DELETE requested for id ${req.params.userId}`);
-        });
+        this.app
+            .route(`/products`)
+            .get(product_controller_1.default.listOfProducts)
+            .post(product_middleware_1.default.validateRequiredProductBodyFields, product_middleware_1.default.validateSameNameDoesntExist, product_controller_1.default.createProduct);
+        this.app.param(`productId`, product_middleware_1.default.extractProductId);
+        this.app
+            .route(`/products/:productId`)
+            .all(product_middleware_1.default.validateProductExists)
+            .get(product_controller_1.default.getProductById)
+            .delete(product_controller_1.default.removeProduct);
+        this.app.put(`/products/:productId`, [
+            product_middleware_1.default.validateRequiredProductBodyFields,
+            product_middleware_1.default.validateSameNameBelongToSameUser,
+            product_controller_1.default.put,
+        ]);
+        this.app.patch(`/products/:productId`, [
+            product_middleware_1.default.validatePatchName,
+            product_controller_1.default.patch,
+        ]);
         return this.app;
     }
 }
 exports.ProductsRoutes = ProductsRoutes;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicHJvZHVjdHMucm91dGVzLmNvbmZpZy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uL3Byb2R1Y3QvcHJvZHVjdHMucm91dGVzLmNvbmZpZy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFBQSx5RUFBb0U7QUFHcEUsTUFBYSxjQUFlLFNBQVEseUNBQWtCO0lBQ2xELFlBQVksR0FBd0I7UUFDaEMsS0FBSyxDQUFDLEdBQUcsRUFBRSxnQkFBZ0IsQ0FBQyxDQUFDO0lBQ2pDLENBQUM7SUFFRCxlQUFlO1FBRVgsSUFBSSxDQUFDLEdBQUcsQ0FBQyxLQUFLLENBQUMsV0FBVyxDQUFDO2FBQ3RCLEdBQUcsQ0FBQyxDQUFDLEdBQW9CLEVBQUUsR0FBcUIsRUFBRSxFQUFFO1lBQ2pELEdBQUcsQ0FBQyxNQUFNLENBQUMsR0FBRyxDQUFDLENBQUMsSUFBSSxDQUFDLG9CQUFvQixDQUFDLENBQUM7UUFDL0MsQ0FBQyxDQUFDO2FBQ0QsSUFBSSxDQUFDLENBQUMsR0FBb0IsRUFBRSxHQUFxQixFQUFFLEVBQUU7WUFDbEQsR0FBRyxDQUFDLE1BQU0sQ0FBQyxHQUFHLENBQUMsQ0FBQyxJQUFJLENBQUMsa0JBQWtCLENBQUMsQ0FBQztRQUM3QyxDQUFDLENBQUMsQ0FBQztRQUVQLElBQUksQ0FBQyxHQUFHLENBQUMsS0FBSyxDQUFDLHNCQUFzQixDQUFDO2FBQ2pDLEdBQUcsQ0FBQyxDQUFDLEdBQW9CLEVBQUUsR0FBcUIsRUFBRSxJQUEwQixFQUFFLEVBQUU7WUFDN0UscUVBQXFFO1lBQ3JFLGlEQUFpRDtZQUNqRCw4RUFBOEU7WUFDOUUsSUFBSSxFQUFFLENBQUM7UUFDWCxDQUFDLENBQUM7YUFDRCxHQUFHLENBQUMsQ0FBQyxHQUFvQixFQUFFLEdBQXFCLEVBQUUsRUFBRTtZQUNqRCxHQUFHLENBQUMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxDQUFDLElBQUksQ0FBQyx3QkFBd0IsR0FBRyxDQUFDLE1BQU0sQ0FBQyxNQUFNLEVBQUUsQ0FBQyxDQUFDO1FBQ3RFLENBQUMsQ0FBQzthQUNELEdBQUcsQ0FBQyxDQUFDLEdBQW9CLEVBQUUsR0FBcUIsRUFBRSxFQUFFO1lBQ2pELEdBQUcsQ0FBQyxNQUFNLENBQUMsR0FBRyxDQUFDLENBQUMsSUFBSSxDQUFDLHdCQUF3QixHQUFHLENBQUMsTUFBTSxDQUFDLE1BQU0sRUFBRSxDQUFDLENBQUM7UUFDdEUsQ0FBQyxDQUFDO2FBQ0QsS0FBSyxDQUFDLENBQUMsR0FBb0IsRUFBRSxHQUFxQixFQUFFLEVBQUU7WUFDbkQsR0FBRyxDQUFDLE1BQU0sQ0FBQyxHQUFHLENBQUMsQ0FBQyxJQUFJLENBQUMsMEJBQTBCLEdBQUcsQ0FBQyxNQUFNLENBQUMsTUFBTSxFQUFFLENBQUMsQ0FBQztRQUN4RSxDQUFDLENBQUM7YUFDRCxNQUFNLENBQUMsQ0FBQyxHQUFvQixFQUFFLEdBQXFCLEVBQUUsRUFBRTtZQUNwRCxHQUFHLENBQUMsTUFBTSxDQUFDLEdBQUcsQ0FBQyxDQUFDLElBQUksQ0FBQywyQkFBMkIsR0FBRyxDQUFDLE1BQU0sQ0FBQyxNQUFNLEVBQUUsQ0FBQyxDQUFDO1FBQ3pFLENBQUMsQ0FBQyxDQUFDO1FBRVAsT0FBTyxJQUFJLENBQUMsR0FBRyxDQUFDO0lBQ3BCLENBQUM7Q0FFSjtBQXRDRCx3Q0FzQ0MifQ==
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicHJvZHVjdHMucm91dGVzLmNvbmZpZy5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbIi4uLy4uL3Byb2R1Y3QvcHJvZHVjdHMucm91dGVzLmNvbmZpZy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7QUFBQSx5RUFBb0U7QUFDcEUseUZBQWdFO0FBQ2hFLHlGQUFnRTtBQUdoRSxNQUFhLGNBQWUsU0FBUSx5Q0FBa0I7SUFDbEQsWUFBWSxHQUF3QjtRQUNoQyxLQUFLLENBQUMsR0FBRyxFQUFFLGVBQWUsQ0FBQyxDQUFDO0lBQ2hDLENBQUM7SUFFRCxlQUFlO1FBQ1gsSUFBSSxDQUFDLEdBQUc7YUFDSCxLQUFLLENBQUMsV0FBVyxDQUFDO2FBQ2xCLEdBQUcsQ0FBQyw0QkFBaUIsQ0FBQyxjQUFjLENBQUM7YUFDckMsSUFBSSxDQUNELDRCQUFpQixDQUFDLGlDQUFpQyxFQUNuRCw0QkFBaUIsQ0FBQywyQkFBMkIsRUFDN0MsNEJBQWlCLENBQUMsYUFBYSxDQUNsQyxDQUFDO1FBRU4sSUFBSSxDQUFDLEdBQUcsQ0FBQyxLQUFLLENBQUMsV0FBVyxFQUFFLDRCQUFpQixDQUFDLGdCQUFnQixDQUFDLENBQUM7UUFDaEUsSUFBSSxDQUFDLEdBQUc7YUFDSCxLQUFLLENBQUMsc0JBQXNCLENBQUM7YUFDN0IsR0FBRyxDQUFDLDRCQUFpQixDQUFDLHFCQUFxQixDQUFDO2FBQzVDLEdBQUcsQ0FBQyw0QkFBaUIsQ0FBQyxjQUFjLENBQUM7YUFDckMsTUFBTSxDQUFDLDRCQUFpQixDQUFDLGFBQWEsQ0FBQyxDQUFDO1FBRTdDLElBQUksQ0FBQyxHQUFHLENBQUMsR0FBRyxDQUFDLHNCQUFzQixFQUFFO1lBQ2pDLDRCQUFpQixDQUFDLGlDQUFpQztZQUNuRCw0QkFBaUIsQ0FBQyxnQ0FBZ0M7WUFDbEQsNEJBQWlCLENBQUMsR0FBRztTQUN4QixDQUFDLENBQUM7UUFFSCxJQUFJLENBQUMsR0FBRyxDQUFDLEtBQUssQ0FBQyxzQkFBc0IsRUFBRTtZQUNuQyw0QkFBaUIsQ0FBQyxpQkFBaUI7WUFDbkMsNEJBQWlCLENBQUMsS0FBSztTQUMxQixDQUFDLENBQUM7UUFFSCxPQUFPLElBQUksQ0FBQyxHQUFHLENBQUM7SUFDcEIsQ0FBQztDQUNKO0FBbkNELHdDQW1DQyJ9

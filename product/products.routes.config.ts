@@ -1,42 +1,41 @@
 import { CommonRoutesConfig } from '../common/common.routes.config';
+import ProductController from './controller/product.controller';
+import ProductMiddleware from './middleware/product.middleware';
 import express from 'express';
 
 export class ProductsRoutes extends CommonRoutesConfig {
     constructor(app: express.Application) {
-        super(app, 'ProductsRoutes');
+        super(app, 'ProductRoutes');
     }
 
-    configureRoutes() {
+    configureRoutes(): express.Application {
+        this.app
+            .route(`/products`)
+            .get(ProductController.listOfProducts)
+            .post(
+                ProductMiddleware.validateRequiredProductBodyFields,
+                ProductMiddleware.validateSameNameDoesntExist,
+                ProductController.createProduct
+            );
 
-        this.app.route(`/products`)
-            .get((req: express.Request, res: express.Response) => {
-                res.status(200).send(`get lists of users`);
-            })
-            .post((req: express.Request, res: express.Response) => {
-                res.status(200).send(`Create a product`);
-            });
+        this.app.param(`productId`, ProductMiddleware.extractProductId);
+        this.app
+            .route(`/products/:productId`)
+            .all(ProductMiddleware.validateProductExists)
+            .get(ProductController.getProductById)
+            .delete(ProductController.removeProduct);
 
-        this.app.route(`/products/:productID`)
-            .all((req: express.Request, res: express.Response, next: express.NextFunction) => {
-                // this middleware function runs before any request to /users/:userId
-                // but it doesn't accomplish anything just yet---
-                // it simply passes control to the next applicable function below using next()
-                next();
-            })
-            .get((req: express.Request, res: express.Response) => {
-                res.status(200).send(`GET requested for id ${req.params.userId}`);
-            })
-            .put((req: express.Request, res: express.Response) => {
-                res.status(200).send(`PUT requested for id ${req.params.userId}`);
-            })
-            .patch((req: express.Request, res: express.Response) => {
-                res.status(200).send(`PATCH requested for id ${req.params.userId}`);
-            })
-            .delete((req: express.Request, res: express.Response) => {
-                res.status(200).send(`DELETE requested for id ${req.params.userId}`);
-            });
+        this.app.put(`/products/:productId`, [
+            ProductMiddleware.validateRequiredProductBodyFields,
+            ProductMiddleware.validateSameNameBelongToSameUser,
+            ProductController.put,
+        ]);
+
+        this.app.patch(`/products/:productId`, [
+            ProductMiddleware.validatePatchName,
+            ProductController.patch,
+        ]);
 
         return this.app;
     }
-
 }
